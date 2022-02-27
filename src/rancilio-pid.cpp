@@ -2325,7 +2325,7 @@ void looppid() {
             lastmachinestatepid = machinestate;
         }
 
-        bPID.SetTunings(startKp, startKi, 0, P_ON_M);
+        bPID.SetTunings(startKp, startKi, 0, PonE);
         // normal PID
     }
 
