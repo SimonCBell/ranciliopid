@@ -410,10 +410,11 @@ std::vector<editable_t> editableVars = {
     {"BACKFLUSH_ON", "Backflush", rInteger, (void *)&backflushON},
     {"SCALE_WEIGHTSETPOINT", "Brew weight setpoint (g)",kDouble, (void *)&weightSetpoint},
     {"STEAM_KP", "Steam P",kDouble, (void *)&steamKp},
+    {"MACHINE_STATE", "Machine State",kUInt8, (void *)&machinestate},
 };
 
-unsigned long lastTempEvent = 0;
-unsigned long tempEventInterval = 1000;
+unsigned long lastStatusEvent = 0;
+unsigned long statusEventInterval = 1000;
 
 /**
  * @brief Get Wifi signal strength and set bars for display
@@ -2248,9 +2249,9 @@ void looppid() {
     testEmergencyStop();  // test if temp is too high
     bPID.Compute();
 
-    if ((millis() - lastTempEvent) > tempEventInterval) {
-        sendTempEvent(Input, BrewSetPoint, Output);
-        lastTempEvent = millis();
+    if ((millis() - lastStatusEvent) > statusEventInterval) {
+        sendStatusEvent(Input, BrewSetPoint, Output, machinestate, bPID.GetKp(), bPID.GetKi(), bPID.GetKd());
+        lastStatusEvent = millis();
     }
 
     #if (BREWMODE == 2 || ONLYPIDSCALE == 1)

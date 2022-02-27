@@ -22,7 +22,7 @@
                     <div id="chart-heater"></div>
                 </div>
             </div>
-            <script src="/js/temp.js"></script>
+            <script src="/js/status.js"></script>
             <div class="card card-accent-dark mb-5 pb-0 shadow-sm rounded">
                 <div class="card-body bg-light pb-1 rounded">
                     <h5 class="card-title">
@@ -82,23 +82,30 @@
                         <table class="table table-borderless pb-0 mb-0">
                             <tbody>
                                 <tr>
+                                    <td><b>Machine state</b></td>
+                                    <td><span id="varMACHINE_STATE">int</span></td>
+                                    <!-- TODO: convert number here to string of machine state -->
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                <tr>
                                     <td><b>Temperature</b></td>
-                                    <td><span id="varTEMP">%VAR_SHOW_TEMP%</span>° C</td>
+                                    <td><span id="varTEMP">int</span>° C</td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td><b>P-Term</b></td>
-                                    <td>%VAR_SHOW_PID_KP%</td>
+                                    <td><span id="varKp">int</span></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td><b>I-Term</b></td>
-                                    <td>%VAR_SHOW_PID_TN%</td>
+                                    <td><span id="varKi">int</span></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td><b>D-Term</b></td>
-                                    <td>%VAR_SHOW_PID_TV%</td>
+                                    <td><span id="varKd">int</span></td>
                                     <td></td>
                                 </tr>
                             </tbody>

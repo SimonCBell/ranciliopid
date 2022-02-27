@@ -49,6 +49,11 @@ double curTemp = 0.0;
 double tTemp = 0.0;
 double hPower = 0.0;
 
+MachineState curmachinestate = kInit;
+double curKp = 0.0;
+double curKi = 0.0;
+double curkd = 0.0;
+
 void serverSetup();
 void setEepromWriteFcn(int (*fcnPtr)(void));
 
@@ -66,18 +71,22 @@ uint8_t flipUintValue(uint8_t value) {
     return (value + 3) % 2;
 }
 
-String getTempString() {
-    StaticJsonDocument<96> doc;
+String getStatusString() {
+    StaticJsonDocument<200> doc;
 
     doc["currentTemp"] = curTemp;
     doc["targetTemp"] = tTemp;
     doc["heaterPower"] = hPower;
+    doc["MachineState"] = curmachinestate;
+    doc["currentKp"] = curKp;
+    doc["currentKi"] = curKi;
+    doc["currentKd"] = curkd;
 
-    String jsonTemps;
+    String jsonStatus;
 
-    serializeJson(doc, jsonTemps);
+    serializeJson(doc, jsonStatus);
 
-    return jsonTemps;
+    return jsonStatus;
 }
 
 String generateForm(String varName) {
@@ -302,7 +311,7 @@ void serverSetup() {
     });
 
     server.on("/temperatures", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String json = getTempString();
+        String json = getStatusString();
         request->send(200, "application/json", json);
         json = String();
     });
@@ -322,13 +331,24 @@ void serverSetup() {
 }
 
 
-void sendTempEvent(float currentTemp, float targetTemp, float heaterPower) {
+void sendStatusEvent(float currentTemp,
+                     float targetTemp,
+                     float heaterPower,
+                     MachineState currentMachineState,
+                     double currentKp,
+                     double currentKi,
+                     double currentKd) {
+
     curTemp = currentTemp;
     tTemp = targetTemp;
     hPower = heaterPower;
+    curmachinestate = currentMachineState;
+    curKp = currentKp;
+    curKi = currentKi;
+    curkd = currentKd;
 
     events.send("ping", NULL, millis());
-    events.send(getTempString().c_str(), "new_temps", millis());
+    events.send(getStatusString().c_str(), "new_status", millis());
 }
 
 #endif
