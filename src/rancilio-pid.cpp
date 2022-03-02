@@ -258,7 +258,7 @@ const unsigned long intervaltempmestsic = 400;
 const unsigned long intervaltempmesds18b20 = 400;
 int pidMode = 1;  // 1 = Automatic, 0 = Manual
 
-const unsigned int windowSize = 1000;
+const unsigned int windowSize = 3000;
 unsigned int isrCounter = 0;  // counter for ISR
 unsigned long windowStartTime;
 double Input, Output;
