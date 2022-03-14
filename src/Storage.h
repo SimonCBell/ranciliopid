@@ -29,6 +29,7 @@ typedef enum
   STO_ITEM_BD_THRESHOLD,            // brew detection limit
   STO_ITEM_PID_KP_START,            // PID P part at cold start phase
   STO_ITEM_PID_TN_START,            // PID I part at cold start phase
+  STO_ITEM_START_TIMER,             // Timer kcold
   STO_ITEM_SOFT_AP_ENABLED_CHECK,   // soft AP enable state
   STO_ITEM_WIFI_SSID,               // Wifi SSID
   STO_ITEM_WIFI_PASSWORD,           // Wifi password

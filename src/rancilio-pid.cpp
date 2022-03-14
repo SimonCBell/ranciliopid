@@ -276,6 +276,7 @@ double aggTn = AGGTN;
 double aggTv = AGGTV;
 double startKp = STARTKP;
 double startTn = STARTTN;
+double startTimer = STARTTIMER;
 double steamKp = STEAMKP;
 
 #if startTn == 0
@@ -338,6 +339,7 @@ unsigned int MQTTReCnctCount = 0;  // Blynk Reconnection counter
 // system parameters (current value as pointer to variable, minimum, maximum, optional storage ID)
 SysPara<double> sysParaPidKpStart(&startKp, 0, 200, STO_ITEM_PID_KP_START);
 SysPara<double> sysParaPidTnStart(&startTn, 0, 999, STO_ITEM_PID_TN_START);
+SysPara<double> sysParaPidStartTimer(&startTimer, 0, 20, STO_ITEM_START_TIMER);
 SysPara<double> sysParaPidKpReg(&aggKp, 0, 200, STO_ITEM_PID_KP_REGULAR);
 SysPara<double> sysParaPidTnReg(&aggTn, 0, 999, STO_ITEM_PID_TN_REGULAR);
 SysPara<double> sysParaPidTvReg(&aggTv, 0, 999, STO_ITEM_PID_TV_REGULAR);
@@ -407,6 +409,7 @@ std::vector<editable_t> editableVars = {
     {"AP_WIFI_KEY", "AP WiFi Password", kCString, (void *)AP_WIFI_KEY},
     {"START_KP", "Start P", kDouble, (void *)&startKp},
     {"START_TN", "Start I", kDouble, (void *)&startTn},
+    {"START_TIMER", "Cold start Time (min)", kDouble, (void *)&startTimer},    
     {"STEAM_MODE", "Steam Mode", rInteger, (void *)&SteamON},
     {"BACKFLUSH_ON", "Backflush", rInteger, (void *)&backflushON},
     {"SCALE_WEIGHTSETPOINT", "Brew weight setpoint (g)",kDouble, (void *)&weightSetpoint},
@@ -1382,29 +1385,17 @@ void machinestatevoid() {
             */
             switch (machinestatecold) {
                 case 0:
-                    if (Input >= (BrewSetPoint - 1) && Input < 150) {
-                        machinestatecoldmillis = millis();  // get millis for interval calc
-                        machinestatecold = 10;              // new state
-                        Serial.println(
-                            "Input >= (BrewSetPoint-1), wait 10 sec before machinestate "
-                            "19");
-                    }
+                    machinestatecoldmillis = millis();  // get millis for interval calc
+                    machinestatecold = 10;              // new state
+                    
                     break;
 
                 case 10:
-                    if (Input < (BrewSetPoint - 1)) {
-                        machinestatecold = 0;  //  Input was only one time above
-                                            //  BrewSetPoint, reset machinestatecold
-                        Serial.println(
-                            "Reset timer for machinestate 19: Input < (BrewSetPoint-1)");
-                    }
-
-                    if (machinestatecoldmillis + 10 * 1000 <
-                        millis())  // 10 sec Input above BrewSetPoint, no set new state
-                    {
+                    if (machinestatecoldmillis + (startTimer * 60 * 1000) <
+                        millis()) {
                         machinestate = kSetPointNegative;
                         Serial.println(
-                            "10 sec Input >= (BrewSetPoint-1) finished, switch to state "
+                            "kcold timer elapsed, switch to machinne state "
                             "19");
                     }
                     break;
@@ -1440,7 +1431,8 @@ void machinestatevoid() {
         case kSetPointNegative:
             brewdetection();  // if brew detected, set PID values
 
-            if (Input >= (BrewSetPoint)) {
+            // check that temp is at least -2C within setpoint, otherwise keep kStart PID values 
+            if (Input >= (BrewSetPoint - 1)) {
                 machinestate = kPidNormal;
             }
 
@@ -2443,6 +2435,7 @@ void setPidStatus(int pidStatus) {
 int readSysParamsFromStorage(void) {
     if (sysParaPidKpStart.getStorage() != 0) return -1;
     if (sysParaPidTnStart.getStorage() != 0) return -1;
+    if (sysParaPidStartTimer.getStorage() != 0) return -1;
     if (sysParaPidKpReg.getStorage() != 0) return -1;
     if (sysParaPidTnReg.getStorage() != 0) return -1;
     if (sysParaPidTvReg.getStorage() != 0) return -1;
@@ -2470,6 +2463,7 @@ int readSysParamsFromStorage(void) {
 int writeSysParamsToStorage(void) {
     if (sysParaPidKpStart.setStorage() != 0) return -1;
     if (sysParaPidTnStart.setStorage() != 0) return -1;
+    if (sysParaPidStartTimer.setStorage() != 0) return -1;
     if (sysParaPidKpReg.setStorage() != 0) return -1;
     if (sysParaPidTnReg.setStorage() != 0) return -1;
     if (sysParaPidTvReg.setStorage() != 0) return -1;

@@ -44,9 +44,11 @@ typedef struct __attribute__((packed)) {
     double pidKpStart;
     uint8_t freeToUse12[2];
     uint8_t softApEnabledCheck;
-    uint8_t freeToUse13[9];
+    uint8_t freeToUse13[6];
     double pidTnStart;
     uint8_t freeToUse14[2];
+    double startTimer;
+    uint8_t freeToUse15[2];
     char wifiSSID[25 + 1];
     char wifiPassword[25 + 1];
     double weightsetpoint;
@@ -87,8 +89,10 @@ static const sto_data_t itemDefaults PROGMEM = {
     STARTKP,                                  // STO_ITEM_PID_KP_START
     {0xFF, 0xFF},                             // free to use
     0,                                        // STO_ITEM_SOFT_AP_ENABLED_CHECK
-    {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},  // free to use
+    {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},  // free to use
     STARTTN,       // STO_ITEM_PID_TN_START
+    {0xFF, 0xFF},
+    STARTTIMER,    // STO_ITEM_START_TIMER
     {0xFF, 0xFF},  // free to use
     "",            // STO_ITEM_WIFI_SSID
     "",            // STO_ITEM_WIFI_PASSWORD
@@ -179,6 +183,11 @@ static inline int32_t getItemAddr(sto_item_id_t itemId, uint16_t* maxItemSize = 
         case STO_ITEM_PID_TN_START:
             addr = offsetof(sto_data_t, pidTnStart);
             size = STRUCT_MEMBER_SIZE(sto_data_t, pidTnStart);
+            break;
+
+        case STO_ITEM_START_TIMER:
+            addr = offsetof(sto_data_t, startTimer);
+            size = STRUCT_MEMBER_SIZE(sto_data_t, startTimer);
             break;
 
         case STO_ITEM_SOFT_AP_ENABLED_CHECK:

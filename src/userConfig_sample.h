@@ -137,6 +137,7 @@ enum MACHINE {
 #define AGGTV 0                    // PID Tv (regular phase)
 #define STARTKP 50                 // PID Kp (coldstart phase)
 #define STARTTN 150                // PID Tn (coldstart phase)
+#define STARTTIMER 10              // time to stay in coldstart phase in minutes
 #define STEAMKP 150                // PID kp (steam phase)
 #define AGGBKP 50                  // PID Kp (brew detection phase)
 #define AGGBTN 0                   // PID Tn (brew detection phase)

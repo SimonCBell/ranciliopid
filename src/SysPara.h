@@ -46,6 +46,11 @@ class SysPara {
             _data.max = max;
             _stoItemId = stoItemId;
             getStorage();           // init current value with storage value
+
+            Serial.println("-----------------------------------");
+            Serial.println(*_data.curPtr);
+            Serial.println(_data.min);
+            Serial.println(_data.max);
         }
 
        /**
@@ -104,13 +109,18 @@ class SysPara {
         */
         int setStorage(bool commit = false) {
             if (_stoItemId < STO_ITEM__LAST_ENUM) {
-                if ((*_data.curPtr >= _data.min) && (*_data.curPtr <= _data.max))
+                if ((*_data.curPtr >= _data.min) && (*_data.curPtr <= _data.max)){
                     return storageSet(_stoItemId, *_data.curPtr, commit);
+                } else {
                 Serial.printf("%s(): value outside of range!\n", __FUNCTION__);
+                Serial.printf("%s(): item=%i value=%.1f\n", __FUNCTION__, _stoItemId, *_data.curPtr);
+                Serial.printf("min= %.1f and max= %.1f\n", _data.min, _data.max);
                 return -1;
-            }
+                }
+            } else {
             Serial.printf("%s(): no storage ID set!\n", __FUNCTION__);
             return -1;
+            }
         }
 
     private:
