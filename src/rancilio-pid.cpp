@@ -1897,6 +1897,19 @@ void setup() {
 
     storageSetup();
 
+    if (triggerType) {
+        relayON = HIGH;
+        relayOFF = LOW;
+    } else {
+        relayON = LOW;
+        relayOFF = HIGH;
+    }
+
+    pinMode(PINVALVE, OUTPUT);
+    pinMode(PINPUMP, OUTPUT);
+    digitalWrite(PINVALVE, relayOFF);
+    digitalWrite(PINPUMP, relayOFF);
+
     // Check AP Mode
     checklastpoweroff();
 
@@ -1913,13 +1926,6 @@ void setup() {
         createSoftAp();
     } else if (softApEnabled == 0) {
         // Define trigger type
-        if (triggerType) {
-            relayON = HIGH;
-            relayOFF = LOW;
-        } else {
-            relayON = LOW;
-            relayOFF = HIGH;
-        }
 
         if (TRIGGERRELAYTYPE) {
             relayETriggerON = HIGH;
@@ -1937,12 +1943,8 @@ void setup() {
         }
 
         // Initialize Pins
-        pinMode(PINVALVE, OUTPUT);
-        pinMode(PINPUMP, OUTPUT);
         pinMode(PINHEATER, OUTPUT);
         pinMode(PINSTEAMSWITCH, INPUT);
-        digitalWrite(PINVALVE, relayOFF);
-        digitalWrite(PINPUMP, relayOFF);
         digitalWrite(PINHEATER, LOW);
 
         // IF Etrigger selected
