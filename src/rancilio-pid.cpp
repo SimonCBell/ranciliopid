@@ -262,6 +262,7 @@ const unsigned int windowSize = 3000;
 unsigned int isrCounter = 0;  // counter for ISR
 unsigned long windowStartTime;
 double Input, Output;
+double Normalised_Output;
 double setPointTemp;
 double previousInput = 0;
 
@@ -2249,7 +2250,8 @@ void looppid() {
     bPID.Compute();
 
     if ((millis() - lastStatusEvent) > statusEventInterval) {
-        sendStatusEvent(Input, BrewSetPoint, Output, machinestate, bPID.GetKp(), bPID.GetKi(), bPID.GetKd());
+        Normalised_Output = (100 * Output) / windowSize;
+        sendStatusEvent(Input, BrewSetPoint, Normalised_Output, machinestate, bPID.GetKp(), bPID.GetKi(), bPID.GetKd());
         lastStatusEvent = millis();
     }
 
