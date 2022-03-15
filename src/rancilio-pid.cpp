@@ -279,6 +279,21 @@ double startTn = STARTTN;
 double startTimer = STARTTIMER;
 double steamKp = STEAMKP;
 
+//fake temp signal parameters
+int PeriodSin = 10000;
+double AmplitudeSin = 0.05;
+double SinTimePeriodic = 0.0;
+double SinSignal = 0.0;
+
+double GrowthRate = 0.5;
+int GrowthOffset = 15;
+int AmplitudeGrowth = 30;
+int PeriodGrowth = 100000;
+double GrowthTimePeriodic = 0.0;
+double GrowthSignal = 0.0;
+
+int integerMillis = 0;
+
 #if startTn == 0
     double startKi = 0;
 #else
@@ -795,6 +810,23 @@ void refreshTemp() {
             } else if (firstreading != 0) {
                 firstreading = 0;
             }
+        }
+    }
+
+    if (TempSensor == 3) {
+        // fake temperature signal to allow offline development
+
+        if (currentMillistemp - previousMillistemp >= intervaltempmesds18b20) {
+            previousMillistemp = currentMillistemp;
+
+            integerMillis = round(currentMillistemp); // convert to integer as Modulo only works with integers
+            GrowthTimePeriodic = AmplitudeGrowth * (1.0/PeriodGrowth) *  (integerMillis % PeriodGrowth);
+            SinTimePeriodic =  (1.0/PeriodSin) * (integerMillis % PeriodSin);
+
+            GrowthSignal = setPoint * (1.0/(1.0 + exp(-GrowthRate * (GrowthTimePeriodic - GrowthOffset))));
+            SinSignal = 1.0 + AmplitudeSin * sin(2 * PI * SinTimePeriodic);
+
+            Input = GrowthSignal * SinSignal;
         }
     }
 }
