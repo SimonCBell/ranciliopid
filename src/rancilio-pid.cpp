@@ -29,7 +29,7 @@
 #include <PubSubClient.h>
 #include <U8g2lib.h>    // i2c display
 #include <ZACwire.h>    // new TSIC bus library
-#include "PID_v1.h"     // for PID calculation
+#include "PIDRampSetpoint.h"     // for PID calculation
 #include "TSIC.h"       // library for TSIC temp sensor
 
 #if defined(ESP8266)
@@ -268,6 +268,7 @@ double previousInput = 0;
 
 double BrewSetPoint = SETPOINT;
 double setPoint = BrewSetPoint;
+double RampedSetPoint;
 double SteamSetPoint = STEAMSETPOINT;
 int SteamON = 0;
 int SteamFirstON = 0;
@@ -288,7 +289,7 @@ double SinSignal = 0.0;
 double GrowthRate = 0.5;
 int GrowthOffset = 15;
 int AmplitudeGrowth = 30;
-int PeriodGrowth = 100000;
+int PeriodGrowth = 600000;
 double GrowthTimePeriodic = 0.0;
 double GrowthSignal = 0.0;
 
@@ -311,7 +312,7 @@ double aggKd = aggTv * aggKp;
 // Timer - ISR for PID calculation and heat realay output
 #include "ISR.h"
 
-PID bPID(&Input, &Output, &setPoint, aggKp, aggKi, aggKd, PonE, DIRECT);
+PID bPID(&Input, &Output, &setPoint, &RampedSetPoint, aggKp, aggKi, aggKd, PonE, DIRECT);
 
 // Dallas temp sensor
 OneWire oneWire(ONE_WIRE_BUS);  // Setup a oneWire instance to communicate with any OneWire
@@ -827,6 +828,15 @@ void refreshTemp() {
             SinSignal = 1.0 + AmplitudeSin * sin(2 * PI * SinTimePeriodic);
 
             Input = GrowthSignal * SinSignal;
+
+            // after cycle of dummy signal reset pid output 
+            // to prevent integral windup
+            if (Input <= 0.08){
+                bPID.SetMode(0);
+                Output = 0;
+                bPID.SetMode(1);
+                Serial.println("reset PID");
+            }            
         }
     }
 }
@@ -2273,11 +2283,16 @@ void looppid() {
 
     refreshTemp();        // update temperature values
     testEmergencyStop();  // test if temp is too high
-    bPID.Compute();
 
+    if (pidMode){
+        bPID.Compute();
+    } else {
+        RampedSetPoint = 0;
+        Output = 0;
+    }
     if ((millis() - lastStatusEvent) > statusEventInterval) {
         Normalised_Output = (100 * Output) / windowSize;
-        sendStatusEvent(Input, BrewSetPoint, Normalised_Output, machinestate, bPID.GetKp(), bPID.GetKi(), bPID.GetKd());
+        sendStatusEvent(Input, RampedSetPoint, Normalised_Output, machinestate, bPID.GetKp(), bPID.GetKi(), bPID.GetKd());
         lastStatusEvent = millis();
     }
 
