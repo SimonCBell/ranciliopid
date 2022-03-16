@@ -17,7 +17,7 @@
  *    The parameters specified here are those for for which we can't set up
  *    reliable defaults, so we need to have the user set them.
  ***************************************************************************/
-PID::PID(double* Input, double* Output, double* Setpoint, double* RampedSetPoint,
+PID::PID(double* Input, double* Output, double* Setpoint, double* RampedSetPoint, double RiseTime,
         double Kp, double Ki, double Kd, int POn, int ControllerDirection)
 {
     myOutput = Output;
@@ -32,10 +32,7 @@ PID::PID(double* Input, double* Output, double* Setpoint, double* RampedSetPoint
     SampleTime = 3000;							
 
     PID::SetControllerDirection(ControllerDirection);
-    PID::SetTunings(Kp, Ki, Kd, POn);
-   
-    // exponential settings
-    GrowthRate = 2.0/100000.0;
+    PID::SetTunings(Kp, Ki, Kd, RiseTime, POn);
 
     newstart = 1; 
 
@@ -136,9 +133,19 @@ bool PID::Compute(){
  * it's called automatically from the constructor, but tunings can also
  * be adjusted on the fly during normal operation
  ******************************************************************************/
-void PID::SetTunings(double Kp, double Ki, double Kd, int POn)
+void PID::SetTunings(double Kp, double Ki, double Kd, double RiseTime, int POn)
 {
    if (Kp<0 || Ki<0 || Kd<0) return;
+
+
+    riseTime = RiseTime;
+    // growth rate from 20C to setpoint,
+    // if above 20C to begin with will reach setpoint faster
+    if (riseTime <= 0.1){
+       GrowthRate = 1;
+    } else{
+      GrowthRate = (1.5 + log(*mySetpoint - 20))/(riseTime * 60 * 1000);
+    }
 
    pOn = POn;
    pOnE = POn == P_ON_E;
@@ -162,7 +169,7 @@ void PID::SetTunings(double Kp, double Ki, double Kd, int POn)
  * Set Tunings using the last-rembered POn setting
  ******************************************************************************/
 void PID::SetTunings(double Kp, double Ki, double Kd){
-    SetTunings(Kp, Ki, Kd, pOn); 
+    SetTunings(Kp, Ki, Kd, riseTime, pOn); 
 }
 
 /* SetSampleTime(...) *********************************************************

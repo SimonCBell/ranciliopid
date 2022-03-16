@@ -312,7 +312,7 @@ double aggKd = aggTv * aggKp;
 // Timer - ISR for PID calculation and heat realay output
 #include "ISR.h"
 
-PID bPID(&Input, &Output, &setPoint, &RampedSetPoint, aggKp, aggKi, aggKd, PonE, DIRECT);
+PID bPID(&Input, &Output, &setPoint, &RampedSetPoint, startTimer, aggKp, aggKi, aggKd, PonE, DIRECT);
 
 // Dallas temp sensor
 OneWire oneWire(ONE_WIRE_BUS);  // Setup a oneWire instance to communicate with any OneWire
@@ -828,7 +828,7 @@ void refreshTemp() {
             SinSignal = 1.0 + AmplitudeSin * sin(2 * PI * SinTimePeriodic);
 
             Input = GrowthSignal * SinSignal;
-            Input = 100;
+            Input = 20;
 
             // after cycle of dummy signal reset pid output 
             // to prevent integral windup
@@ -2356,7 +2356,7 @@ void looppid() {
             lastmachinestatepid = machinestate;
         }
 
-        bPID.SetTunings(startKp, startKi, 0, PonE);
+        bPID.SetTunings(startKp, startKi, 0, startTimer, PonE);
         // normal PID
     }
 
@@ -2376,7 +2376,7 @@ void looppid() {
             lastmachinestatepid = machinestate;
         }
 
-        bPID.SetTunings(aggKp, aggKi, aggKd, PonE);
+        bPID.SetTunings(aggKp, aggKi, aggKd, 0, PonE);
         kaltstart = false;
     }
 
@@ -2396,7 +2396,7 @@ void looppid() {
             lastmachinestatepid = machinestate;
         }
 
-        bPID.SetTunings(aggbKp, aggbKi, aggbKd, PonE);
+        bPID.SetTunings(aggbKp, aggbKi, aggbKd, 0, PonE);
     }
 
     // Steam on
@@ -2406,7 +2406,7 @@ void looppid() {
             lastmachinestatepid = machinestate;
         }
 
-        bPID.SetTunings(steamKp, 0, 0, PonE);
+        bPID.SetTunings(steamKp, 0, 0, 0, PonE);
     }
 
     // chill-mode after steam
@@ -2434,7 +2434,7 @@ void looppid() {
             lastmachinestatepid = machinestate;
         }
 
-        bPID.SetTunings(aggbKp, aggbKi, aggbKd, PonE);
+        bPID.SetTunings(aggbKp, aggbKi, aggbKd, 0, PonE);
     }
     // sensor error OR Emergency Stop
 }
