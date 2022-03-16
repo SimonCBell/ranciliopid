@@ -288,8 +288,8 @@ double SinSignal = 0.0;
 
 double GrowthRate = 0.5;
 int GrowthOffset = 15;
-int AmplitudeGrowth = 30;
-int PeriodGrowth = 600000;
+int AmplitudeGrowth = 40;
+int PeriodGrowth = 60000;
 double GrowthTimePeriodic = 0.0;
 double GrowthSignal = 0.0;
 
@@ -828,15 +828,14 @@ void refreshTemp() {
             SinSignal = 1.0 + AmplitudeSin * sin(2 * PI * SinTimePeriodic);
 
             Input = GrowthSignal * SinSignal;
+            Input = 100;
 
             // after cycle of dummy signal reset pid output 
             // to prevent integral windup
-            if (Input <= 0.08){
-                bPID.SetMode(0);
-                Output = 0;
-                bPID.SetMode(1);
-                Serial.println("reset PID");
-            }            
+            // if (Input <= 0.08){
+            //     bPID.Reset();
+            //     Serial.println("reset PID");
+            // }            
         }
     }
 }
@@ -1400,14 +1399,8 @@ void machinestatevoid() {
                 Serial.println(machinestate);
 
                 // some users have 100 % Output in kInit / Koldstart, reset PID
-                pidMode = 0;
-                bPID.SetMode(pidMode);
-                Output = 0;
                 digitalWrite(PINHEATER, LOW);  // Stop heating
-
-                // start PID
-                pidMode = 1;
-                bPID.SetMode(pidMode);
+                bPID.Reset();
             }
 
             if (pidON == 0) {
@@ -2284,12 +2277,8 @@ void looppid() {
     refreshTemp();        // update temperature values
     testEmergencyStop();  // test if temp is too high
 
-    if (pidMode){
-        bPID.Compute();
-    } else {
-        RampedSetPoint = 0;
-        Output = 0;
-    }
+    bPID.Compute();
+
     if ((millis() - lastStatusEvent) > statusEventInterval) {
         Normalised_Output = (100 * Output) / windowSize;
         sendStatusEvent(Input, RampedSetPoint, Normalised_Output, machinestate, bPID.GetKp(), bPID.GetKi(), bPID.GetKd());

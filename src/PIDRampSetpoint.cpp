@@ -60,83 +60,75 @@ PID::PID(double* Input, double* Output, double* Setpoint, double* RampedSetPoint
  *   pid Output needs to be computed.  returns true when the output is computed,
  *   false when nothing has been done.
  **********************************************************************************/
-bool PID::Compute()
-{
+bool PID::Compute(){
 
-   if(!inAuto) return false;
-   unsigned long now = millis();
-   timeChange = (now - lastTime);
-   
-   if(timeChange>=SampleTime){
+   if(inAuto){
 
-      Serial.print("newstart state ");
-      Serial.println(newstart);
-      Serial.print("Timechange ");
-      Serial.println(timeChange);
-
-      if (newstart){  
-         Serial.println("first compute intialise settings");
-         PID::Initialize();
-         newstart = 0;
-      }      
-            
-      /*Compute all the working error variables*/
-      double input = *myInput;
-      TimeFromStart += timeChange; 
-
-      Serial.print("time in seconds that pid has been running: ");
-      Serial.println(TimeFromStart);
+      unsigned long now = millis();
+      timeChange = (now - lastTime);
       
-      // sigmoid
-      //RampedSetpoint = *myTempInitial + (*mySetpoint - *myTempInitial) * (1.0/(1.0 + exp(-GrowthRate * (TimeFromStartSeconds - GrowthOffset)))) ;
-   
-      *myRampedSetpoint = *mySetpoint - exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+      if(timeChange>=SampleTime){
 
-      Serial.print("ramped setpoint ");
-      Serial.println(*myRampedSetpoint);
-
-      double error = *myRampedSetpoint - input;
-      double dInput = (input - lastInput);
-      double kp_used;
-      double ki_used;
-
-      if (error < 0){
-         kp_used = 1 * kp;
-         ki_used = 1 * ki;
-      } else {
-         kp_used = kp;
-         ki_used = ki;
-      }
-
-      outputSum+= (ki_used * error);
-
-      /*Add Proportional on Measurement, if P_ON_M is specified*/
-      if(!pOnE) outputSum-= kp_used * dInput;
-
-      if(outputSum > outMax) outputSum= outMax;
-      else if(outputSum < outMin) outputSum= outMin;
-
-      /*Add Proportional on Error, if P_ON_E is specified*/
-      double output;
-      if(pOnE) output = kp_used * error;
-      else output = 0;
-
-      /*Compute Rest of PID Output*/
-      output += outputSum - kd * dInput;
-
-      if(output > outMax) output = outMax;
-      else if(output < outMin) output = outMin;
-      *myOutput = output;
-
-      /*Remember some variables for next time*/
-      lastInput = input;
-      lastTime = now;
-      
-      return true;
+         if (newstart){  
+            Serial.println("PID: compute intialise settings");
+            PID::Initialize();
+            newstart = 0;
+         }      
+               
+         /*Compute all the working error variables*/
+         double input = *myInput;
+         TimeFromStart += timeChange; 
          
+         // sigmoid
+         //RampedSetpoint = *myTempInitial + (*mySetpoint - *myTempInitial) * (1.0/(1.0 + exp(-GrowthRate * (TimeFromStartSeconds - GrowthOffset)))) ;
+      
+         *myRampedSetpoint = *mySetpoint - exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+
+         double error = *myRampedSetpoint - input;
+         double dInput = (input - lastInput);
+         double kp_used;
+         double ki_used;
+
+         if (error < 0){
+            kp_used = 1 * kp;
+            ki_used = 1 * ki;
+         } else {
+            kp_used = kp;
+            ki_used = ki;
+         }
+
+         outputSum+= (ki_used * error);
+
+         /*Add Proportional on Measurement, if P_ON_M is specified*/
+         if(!pOnE) outputSum-= kp_used * dInput;
+
+         if(outputSum > outMax) outputSum= outMax;
+         else if(outputSum < outMin) outputSum= outMin;
+
+         /*Add Proportional on Error, if P_ON_E is specified*/
+         double output;
+         if(pOnE) output = kp_used * error;
+         else output = 0;
+
+         /*Compute Rest of PID Output*/
+         output += outputSum - kd * dInput;
+
+         if(output > outMax) output = outMax;
+         else if(output < outMin) output = outMin;
+         *myOutput = output;
+
+         /*Remember some variables for next time*/
+         lastInput = input;
+         lastTime = now;
+         
+         return true;
+            
+      } else {
+      return false;
+      }
    } else {
-    return false;
-   }
+      return false;
+   } 
 }
 
 /* SetTunings(...)*************************************************************
@@ -219,14 +211,22 @@ void PID::SetOutputLimits(double Min, double Max)
  ******************************************************************************/
 void PID::SetMode(int Mode)
 {
-    newstart = 1;
     bool newAuto = (Mode == AUTOMATIC);
     if(newAuto && !inAuto)
     {  /*we just went from manual to auto*/
-        PID::Initialize();
+      newstart = 1;
     }
     inAuto = newAuto;
 }
+
+/* Reset()****************************************************************
+ *	function available outside class to trigger a newstart, 
+ * initalising all parameters again
+ ******************************************************************************/
+void PID::Reset(){
+   newstart = 1;
+}
+
 
 /* Initialize()****************************************************************
  *	does all the things that need to happen to ensure a bumpless transfer
@@ -241,22 +241,12 @@ void PID::Initialize()
    lastTime = millis() - SampleTime;
    timeChange = 0;
 
-   Serial.print("reset pid time millis: ");
-   Serial.println(TimeFromStart);
-   Serial.print("sample time ");
-   Serial.println(SampleTime);
-
    // deal with log(-x) -> -infinity
    if ((*mySetpoint - *myInput) > 0 ){
       GrowthOffset = log(*mySetpoint - *myInput);
    } else{
-      GrowthOffset = 0;
+      GrowthOffset = -100;
    }
-   Serial.print("temp at start: ");
-   Serial.println(*myInput);
-   Serial.print("calculated offset: ");
-   Serial.println(GrowthOffset);
-   
 
    if(outputSum > outMax) outputSum = outMax;
    else if(outputSum < outMin) outputSum = outMin;
