@@ -84,10 +84,11 @@ class PID
   double RampRate;
   double GrowthRate;
   double GrowthOffset;
-  unsigned long TimeFromStartMillis;
-	unsigned long lastTime;
+  unsigned long TimeFromStart;
+	unsigned long lastTime;int
+  unsigned long timeChange;
 	double outputSum, lastInput;
-  int newstart;
+  bool newstart;
 
 	unsigned long SampleTime;
 	double outMin, outMax;
