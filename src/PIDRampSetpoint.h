@@ -62,6 +62,7 @@ class PID
 
   private:
 	void Initialize();
+  void InitializeRamp();
 	
 	double dispKp;				// * we'll hold on to the tuning parameters in user-entered 
 	double dispKi;				//   format for display purposes
@@ -82,6 +83,7 @@ class PID
 
   double *myTempInitial;		  
   double *myRampedSetpoint;
+  double SPMaxoutputT0;
   double RampRate;
   double GrowthRate;
   double GrowthOffset;
@@ -90,6 +92,7 @@ class PID
   unsigned long timeChange;
 	double outputSum, lastInput;
   bool newstart;
+  bool booststart;
 
 	unsigned long SampleTime;
 	double outMin, outMax;

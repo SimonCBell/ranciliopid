@@ -35,6 +35,7 @@ PID::PID(double* Input, double* Output, double* Setpoint, double* RampedSetPoint
     PID::SetTunings(Kp, Ki, Kd, RiseTime, POn);
 
     newstart = 1; 
+    booststart = 1;
 
 }
 
@@ -75,36 +76,55 @@ bool PID::Compute(){
          /*Compute all the working error variables*/
          double input = *myInput;
          TimeFromStart += timeChange; 
-         
+
+         double dInput = (input - lastInput);
+
          // sigmoid
          //RampedSetpoint = *myTempInitial + (*mySetpoint - *myTempInitial) * (1.0/(1.0 + exp(-GrowthRate * (TimeFromStartSeconds - GrowthOffset)))) ;
-      
-         *myRampedSetpoint = *mySetpoint - exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+         Serial.print("dinput ");
+         Serial.println(dInput);
 
-         double error = *myRampedSetpoint - input;
-         double dInput = (input - lastInput);
-         double kp_used;
-         double ki_used;
-
-         if (error < 0){
-            kp_used = 1 * kp;
-            ki_used = 1 * ki;
+         if(booststart && dInput <= 0){
+            // calculate setpoint to ensure maxouput
+            SPMaxoutputT0 = outMax/kp + input;
+            if (SPMaxoutputT0 > *mySetpoint){
+               *myRampedSetpoint = *mySetpoint;
+            } else{
+               *myRampedSetpoint = SPMaxoutputT0;
+            }
+            Serial.print("static setpoint");
+            Serial.println(*myRampedSetpoint);
+         } else if (booststart && dInput > 0){
+            booststart = 0;
+            PID::InitializeRamp();
+            Serial.print("time from start");
+            Serial.println(TimeFromStart);
+            *myRampedSetpoint = *mySetpoint - exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+            Serial.print("1st ramp setpoint ");
+            Serial.println(*myRampedSetpoint);
+            Serial.print("time from start");
+            Serial.println(TimeFromStart);
          } else {
-            kp_used = kp;
-            ki_used = ki;
+            *myRampedSetpoint = *mySetpoint - exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+            Serial.print("ramp setpoint ");
+            Serial.println(*myRampedSetpoint);
          }
+         
+         double error = *myRampedSetpoint - input;
 
-         outputSum+= (ki_used * error);
+
+
+         outputSum+= (ki * error);
 
          /*Add Proportional on Measurement, if P_ON_M is specified*/
-         if(!pOnE) outputSum-= kp_used * dInput;
+         if(!pOnE) outputSum-= kp * dInput;
 
          if(outputSum > outMax) outputSum= outMax;
          else if(outputSum < outMin) outputSum= outMin;
 
          /*Add Proportional on Error, if P_ON_E is specified*/
          double output;
-         if(pOnE) output = kp_used * error;
+         if(pOnE) output = kp * error;
          else output = 0;
 
          /*Compute Rest of PID Output*/
@@ -222,6 +242,7 @@ void PID::SetMode(int Mode)
     if(newAuto && !inAuto)
     {  /*we just went from manual to auto*/
       newstart = 1;
+      booststart = 1;
     }
     inAuto = newAuto;
 }
@@ -232,6 +253,7 @@ void PID::SetMode(int Mode)
  ******************************************************************************/
 void PID::Reset(){
    newstart = 1;
+   booststart = 1;
 }
 
 
@@ -244,19 +266,26 @@ void PID::Initialize()
    outputSum = 0;
    lastInput = *myInput;
 
+   if(outputSum > outMax) outputSum = outMax;
+   else if(outputSum < outMin) outputSum = outMin;
+}
+
+void PID::InitializeRamp(){
+   
    TimeFromStart = 0;
    lastTime = millis() - SampleTime;
    timeChange = 0;
 
+   Serial.print("current temp");
+   Serial.println(*myInput);
+   
    // deal with log(-x) -> -infinity
-   if ((*mySetpoint - *myInput) > 0 ){
-      GrowthOffset = log(*mySetpoint - *myInput);
+   if ((*mySetpoint + SPMaxoutputT0) > 0 ){
+      GrowthOffset = log(*mySetpoint - SPMaxoutputT0);
    } else{
       GrowthOffset = -100;
    }
 
-   if(outputSum > outMax) outputSum = outMax;
-   else if(outputSum < outMin) outputSum = outMin;
 }
 
 /* SetControllerDirection(...)*************************************************

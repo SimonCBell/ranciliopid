@@ -19,7 +19,7 @@ var curTempTrace = {
   y: curTempVals,
   line: {
     color: '#008080',
-    shape: 'linear'
+    shape: 'hv'
   }
 }
 
@@ -32,7 +32,7 @@ var targetTempTrace = {
   y: targetTempVals,
   line: {
     color: '#9932CC',
-    shape: 'linear'
+    shape: 'hv'
   }
 }
 
@@ -45,7 +45,7 @@ var heaterPowerTrace = {
   y: heaterPowerVals,
   line: {
     color: '#778899',
-    shape: 'linear'
+    shape: 'hv'
   }
 }
 
