@@ -289,7 +289,7 @@ double SinSignal = 0.0;
 double GrowthRate = 0.5;
 int GrowthOffset = 15;
 int AmplitudeGrowth = 40;
-int PeriodGrowth = 60000;
+int PeriodGrowth = 0.5 * 60 * 1000;
 double GrowthTimePeriodic = 0.0;
 double GrowthSignal = 0.0;
 
@@ -354,7 +354,7 @@ unsigned int MQTTReCnctCount = 0;  // Blynk Reconnection counter
 
 // system parameters (current value as pointer to variable, minimum, maximum, optional storage ID)
 SysPara<double> sysParaPidKpStart(&startKp, 0, 200, STO_ITEM_PID_KP_START);
-SysPara<double> sysParaPidTnStart(&startTn, 0, 999, STO_ITEM_PID_TN_START);
+SysPara<double> sysParaPidTnStart(&startTn, 0, 9999, STO_ITEM_PID_TN_START);
 SysPara<double> sysParaPidStartTimer(&startTimer, 0, 20, STO_ITEM_START_TIMER);
 SysPara<double> sysParaPidKpReg(&aggKp, 0, 200, STO_ITEM_PID_KP_REGULAR);
 SysPara<double> sysParaPidTnReg(&aggTn, 0, 999, STO_ITEM_PID_TN_REGULAR);
@@ -828,8 +828,12 @@ void refreshTemp() {
             SinSignal = 1.0 + AmplitudeSin * sin(2 * PI * SinTimePeriodic);
 
             Input = GrowthSignal * SinSignal;
-            Input = 20;
-
+            
+            if (GrowthTimePeriodic < 20){
+                Input = 20;
+            } else {
+                Input = GrowthTimePeriodic;
+            }
             // after cycle of dummy signal reset pid output 
             // to prevent integral windup
             // if (Input <= 0.08){

@@ -159,6 +159,9 @@ void PID::SetTunings(double Kp, double Ki, double Kd, double RiseTime, int POn)
 
 
     riseTime = RiseTime;
+
+
+    riseTime = RiseTime;
     // growth rate from 20C to setpoint,
     // if above 20C to begin with will reach setpoint faster
     if (riseTime <= 0.1){
@@ -225,6 +228,8 @@ void PID::SetOutputLimits(double Min, double Max)
    {
 	   if(*myOutput > outMax) *myOutput = outMax;
 	   else if(*myOutput < outMin) *myOutput = outMin;
+
+      
 
 	   if(outputSum > outMax) outputSum= outMax;
 	   else if(outputSum < outMin) outputSum= outMin;
