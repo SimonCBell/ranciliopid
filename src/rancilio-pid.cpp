@@ -832,7 +832,7 @@ void refreshTemp() {
             if (GrowthTimePeriodic < 20){
                 Input = 20;
             } else {
-                Input = GrowthTimePeriodic;
+                Input = 30;
             }
             // after cycle of dummy signal reset pid output 
             // to prevent integral windup

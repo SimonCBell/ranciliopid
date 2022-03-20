@@ -95,7 +95,7 @@ class PID
   bool booststart;
 
 	unsigned long SampleTime;
-	double outMin, outMax;
+	double outMin, outMax, sumoutMax;
 	bool inAuto, pOnE;
 };
 #endif

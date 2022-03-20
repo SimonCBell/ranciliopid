@@ -109,7 +109,8 @@ bool PID::Compute(){
             Serial.print("ramp setpoint ");
             Serial.println(*myRampedSetpoint);
          }
-         
+
+
          double error = *myRampedSetpoint - input;
 
 
@@ -119,7 +120,7 @@ bool PID::Compute(){
          /*Add Proportional on Measurement, if P_ON_M is specified*/
          if(!pOnE) outputSum-= kp * dInput;
 
-         if(outputSum > outMax) outputSum= outMax;
+         if(outputSum > sumoutMax) outputSum= sumoutMax;
          else if(outputSum < outMin) outputSum= outMin;
 
          /*Add Proportional on Error, if P_ON_E is specified*/
@@ -157,11 +158,12 @@ void PID::SetTunings(double Kp, double Ki, double Kd, double RiseTime, int POn)
 {
    if (Kp<0 || Ki<0 || Kd<0) return;
 
+    // set exponential rise time to be faster than the time th
+    // that the pid is in coldstart settings
+    // TODO - pass parameter over to user
+    double TimeAtSetpoint = 1;
+    riseTime = RiseTime - TimeAtSetpoint;
 
-    riseTime = RiseTime;
-
-
-    riseTime = RiseTime;
     // growth rate from 20C to setpoint,
     // if above 20C to begin with will reach setpoint faster
     if (riseTime <= 0.1){
@@ -224,15 +226,16 @@ void PID::SetOutputLimits(double Min, double Max)
    outMin = Min;
    outMax = Max;
 
+   // TODO: give user access to this parameter
+   sumoutMax = 0.15 * outMax;
+   
    if(inAuto)
    {
 	   if(*myOutput > outMax) *myOutput = outMax;
 	   else if(*myOutput < outMin) *myOutput = outMin;
 
-      
-
-	   if(outputSum > outMax) outputSum= outMax;
-	   else if(outputSum < outMin) outputSum= outMin;
+	   if(outputSum > sumoutMax) outputSum = sumoutMax;
+	   else if(outputSum < outMin) outputSum = outMin;
    }
 }
 
@@ -271,8 +274,6 @@ void PID::Initialize()
    outputSum = 0;
    lastInput = *myInput;
 
-   if(outputSum > outMax) outputSum = outMax;
-   else if(outputSum < outMin) outputSum = outMin;
 }
 
 void PID::InitializeRamp(){
