@@ -84,6 +84,7 @@ class PID
   double *myTempInitial;		  
   double *myRampedSetpoint;
   double SPMaxoutputT0;
+  int EnableRamp;
   double RampRate;
   double GrowthRate;
   double GrowthOffset;

@@ -85,43 +85,61 @@ bool PID::Compute(){
          Serial.println(dInput);
 
          if(booststart && dInput <= 0){
+
+
+            Serial.print("mysetpoing before setting static setpoint ");
+            Serial.println(*mySetpoint);
+
             // calculate setpoint to ensure maxouput
             SPMaxoutputT0 = outMax/kp + input;
+
             if (SPMaxoutputT0 > *mySetpoint){
                *myRampedSetpoint = *mySetpoint;
+               EnableRamp = 0;
             } else{
                *myRampedSetpoint = SPMaxoutputT0;
+               EnableRamp = 1;
             }
-            Serial.print("static setpoint");
+            Serial.print("static setpoint ");
             Serial.println(*myRampedSetpoint);
+            Serial.print("mysetpoint after setting static setpoint ");
+            Serial.println(*mySetpoint);
          } else if (booststart && dInput > 0){
             booststart = 0;
             PID::InitializeRamp();
             Serial.print("time from start");
             Serial.println(TimeFromStart);
-            *myRampedSetpoint = *mySetpoint - exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+            *myRampedSetpoint = *mySetpoint - EnableRamp * exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+            Serial.print("Ramp enabled is: ");
+            Serial.println(EnableRamp);
             Serial.print("1st ramp setpoint ");
             Serial.println(*myRampedSetpoint);
             Serial.print("time from start");
             Serial.println(TimeFromStart);
          } else {
-            *myRampedSetpoint = *mySetpoint - exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+            *myRampedSetpoint = *mySetpoint - EnableRamp * exp(-1.0 * (GrowthRate * TimeFromStart - GrowthOffset));
+            Serial.print("Ramp enabled is: ");
+            Serial.println(EnableRamp);
             Serial.print("ramp setpoint ");
             Serial.println(*myRampedSetpoint);
+            Serial.print("time from start");
+            Serial.println(TimeFromStart);
+            Serial.print("GrowthRate");
+            Serial.println(GrowthRate);
+            Serial.print("GrowthOffset");
+            Serial.println(GrowthOffset);
          }
 
 
          double error = *myRampedSetpoint - input;
 
-
-
-         outputSum+= (ki * error);
+         outputSum += (ki * error);
 
          /*Add Proportional on Measurement, if P_ON_M is specified*/
          if(!pOnE) outputSum-= kp * dInput;
 
-         if(outputSum > sumoutMax) outputSum= sumoutMax;
-         else if(outputSum < outMin) outputSum= outMin;
+         if(outputSum > sumoutMax) outputSum = sumoutMax;
+         else if(outputSum < outMin) outputSum = outMin;
 
          /*Add Proportional on Error, if P_ON_E is specified*/
          double output;
@@ -166,8 +184,14 @@ void PID::SetTunings(double Kp, double Ki, double Kd, double RiseTime, int POn)
 
     // growth rate from 20C to setpoint,
     // if above 20C to begin with will reach setpoint faster
-    if (riseTime <= 0.1){
+    if (riseTime <= 0.1 || (*mySetpoint - 20) <= 0){
        GrowthRate = 1;
+       Serial.println("invalid parameters for growth rate");
+       Serial.print("rise time ");
+       Serial.println(riseTime);
+       Serial.print("set point - 20");
+       Serial.println(*mySetpoint - 20);
+
     } else{
       GrowthRate = (1.5 + log(*mySetpoint - 20))/(riseTime * 60 * 1000);
     }
@@ -286,10 +310,19 @@ void PID::InitializeRamp(){
    Serial.println(*myInput);
    
    // deal with log(-x) -> -infinity
-   if ((*mySetpoint + SPMaxoutputT0) > 0 ){
+   if (EnableRamp && (*mySetpoint - SPMaxoutputT0) > 0){
       GrowthOffset = log(*mySetpoint - SPMaxoutputT0);
    } else{
-      GrowthOffset = -100;
+      Serial.println("invalid growth offset ");
+      Serial.print("ramp enabled is ");
+      Serial.println(EnableRamp);
+      Serial.print("SPmaxoutputT0 ");
+      Serial.println(SPMaxoutputT0);
+      Serial.print("setpoint ");
+      Serial.println(*mySetpoint);
+      Serial.print("setpoint - SPMaxoutputT0: ");
+      Serial.println(*mySetpoint - SPMaxoutputT0);
+      GrowthOffset = 0;
    }
 
 }
