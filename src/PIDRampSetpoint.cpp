@@ -86,7 +86,6 @@ bool PID::Compute(){
 
          if(booststart && dInput <= 0){
 
-
             Serial.print("mysetpoing before setting static setpoint ");
             Serial.println(*mySetpoint);
 

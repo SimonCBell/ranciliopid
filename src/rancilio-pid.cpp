@@ -829,11 +829,16 @@ void refreshTemp() {
 
             Input = GrowthSignal * SinSignal;
             
-            if (GrowthTimePeriodic < 20){
-                Input = 20;
+            if (GrowthTimePeriodic < 5){
+               Input  = 20;
+            } else if (5 < GrowthTimePeriodic &&  GrowthTimePeriodic < 20) {
+                Input = 25;
+            } else if (20 < GrowthTimePeriodic && GrowthTimePeriodic < 25){
+                Input = 90;
             } else {
-                Input = 94;
+                Input = 93;
             }
+
             // after cycle of dummy signal reset pid output 
             // to prevent integral windup
             // if (Input <= 0.08){
