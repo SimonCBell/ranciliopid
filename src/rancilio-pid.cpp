@@ -791,6 +791,14 @@ void refreshTemp() {
             }
         }
     }
+
+    if (TempSensor == 3) {
+        if (currentMillistemp - previousMillistemp >= intervaltempmestsic) {
+            previousMillistemp = currentMillistemp;
+            
+            Input += 0.5; 
+        }
+    }
 }
 
 
