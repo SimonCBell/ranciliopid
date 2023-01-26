@@ -369,7 +369,7 @@ SysPara<double> sysParaBrewThresh(&brewboarder, 0, 999, STO_ITEM_BD_THRESHOLD);
 SysPara<double> sysParaPreInfTime(&preinfusion, 0, 10, STO_ITEM_PRE_INFUSION_TIME);
 SysPara<double> sysParaPreInfPause(&preinfusionpause, 0, 20, STO_ITEM_PRE_INFUSION_PAUSE);
 SysPara<double> sysParaWeightSetPoint(&weightSetpoint, 0, 500, STO_ITEM_WEIGHTSETPOINT);
-SysPara<double> sysParaPidKpSteam(&steamKp, 0, 500, STO_ITEM_PID_KP_STEAM);
+SysPara<double> sysParaPidKpSteam(&steamKp, -1, 500, STO_ITEM_PID_KP_STEAM);
 SysPara<uint8_t> sysParaPidOn(&pidON, 0, 1, STO_ITEM_PID_ON);
 
 
@@ -2286,7 +2286,13 @@ void looppid() {
     refreshTemp();        // update temperature values
     testEmergencyStop();  // test if temp is too high
 
-    bPID.Compute();
+    // WARNING!!! Misuse of steamKp to disable PID and drive constant heating
+    // used for determination of thermal model parameters
+    if (steamKp<0){
+        bPID.Compute();
+    } else {
+        Output = (steamKp/100) * windowSize;
+    }
 
     if ((millis() - lastStatusEvent) > statusEventInterval) {
         Normalised_Output = (100 * Output) / windowSize;

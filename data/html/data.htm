@@ -26,7 +26,7 @@
       return totSecs;
    };
 
-   var TimeTempVals = [];
+   var TimeTempOutVals = [];
    var startTime = new Date();
    var startTimeSecs = startTime.secs();
 
@@ -53,9 +53,15 @@
    
       const curTempKey = keys[0];
       var curTemp = Number(jsonValue[curTempKey]);
+      console.log('temp');
       console.log(curTemp);
 
-      TimeTempVals.push([secsSinceStart ,curTemp]);
+      const heaterPowerKey = keys[2];
+      var curHeaterPower =Number(jsonValue[heaterPowerKey]);
+      console.log('heater power')
+      console.log(curHeaterPower);
+
+      TimeTempOutVals.push([secsSinceStart, curTemp, curHeaterPower]);
    }
 
 
@@ -76,10 +82,10 @@
 
    function updateTable() { 
       var s = '<table><tbody>';
-      s += '<tr><th><b>Time</b></th><th><b>Temp</b></th></tr>';
+      s += '<tr><th><b>Time</b></th><th><b>Temp</b></th><th><b>Heater</b></th></tr>';
 
-      for (const element of TimeTempVals) {
-         s = s +'<tr><td>' + element[0] + '</td>' + '<td>' + element[1] + '</td></tr>' ;
+      for (const element of TimeTempOutVals) {
+         s = s +'<tr><td>' + element[0] + '</td>' + '<td>' + element[1] + '</td>' + '<td>' + element[2] + '</td></tr>' ;
       }
 
       s += '</tbody></table>';
@@ -90,14 +96,14 @@
    function save_data(){
 
       let csvContent = "data:text/csv;charset=utf-8," 
-         + TimeTempVals.map(e => e.join(",")).join("\n");
+         + TimeTempOutVals.map(e => e.join(",")).join("\n");
       
       var encodedUri = encodeURI(csvContent);
       window.open(encodedUri);
    }
 
    function clear_table(){
-      TimeTempVals = [];
+      TimeTempOutVals = [];
       startTime = new Date();
       startTimeSecs = startTime.secs();
       updateTable();

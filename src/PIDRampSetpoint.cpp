@@ -152,6 +152,9 @@ bool PID::Compute(){
          else if(output < outMin) output = outMin;
          *myOutput = output;
 
+         // //REMOVE! ONLY FOR PARAMETER FINDING
+         // *myOutput = 0.05 * outMax;
+
          /*Remember some variables for next time*/
          lastInput = input;
          lastTime = now;
